@@ -77,6 +77,58 @@ class CommandExecutor:
             return f"head: {error}"
         return "\n".join(content.splitlines()[:line_count])
 
+    def rm(self, arguments: list[str]) -> str:
+        """Удаляет файл или каталог только из VFS в памяти."""
+        recursive, path = self._parse_rm_arguments(arguments)
+        if path is None:
+            return "rm: требуется путь"
+        try:
+            parent, name, normalized_path = self._vfs.get_parent_and_name(
+                path,
+                self.current_path,
+            )
+            node = parent.children[name]
+        except KeyError:
+            return f"rm: путь не найден: {path}"
+        except VfsError as error:
+            return f"rm: {error}"
+        if node.is_directory and not recursive:
+            return f"rm: это каталог: {normalized_path}; используйте -r"
+        if self._is_current_or_parent_directory(normalized_path):
+            return "rm: нельзя удалить текущий каталог или его родителя"
+        parent.remove_child(name)
+        return ""
+
+    def chown(self, arguments: list[str]) -> str:
+        """Изменяет владельца узла VFS только в памяти."""
+        if len(arguments) != 2:
+            return "chown: требуется владелец и путь"
+        owner, path = arguments
+        if not owner:
+            return "chown: пустое имя владельца"
+        try:
+            node = self._get_node(path)
+        except VfsError as error:
+            return f"chown: {error}"
+        node.owner = owner
+        return ""
+
+    def _parse_rm_arguments(
+        self,
+        arguments: list[str],
+    ) -> tuple[bool, str | None]:
+        """Разбирает аргументы команды rm."""
+        if len(arguments) == 1:
+            return False, arguments[0]
+        if len(arguments) == 2 and arguments[0] in {"-r", "-R"}:
+            return True, arguments[1]
+        return False, None
+
+    def _is_current_or_parent_directory(self, path: PurePosixPath) -> bool:
+        """Проверяет, удаляется ли текущий каталог или его предок."""
+        current = PurePosixPath(self.current_path)
+        return path == current or path in current.parents
+
     def _parse_head_arguments(
         self,
         arguments: list[str],

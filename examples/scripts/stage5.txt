@@ -1,0 +1,13 @@
+# Этап 5: команды rm и chown изменяют VFS только в памяти.
+vfs-info
+ls
+chown student hello.txt
+chown
+chown student missing.txt
+rm hello.txt
+ls
+rm docs
+rm -r /
+rm -r docs
+ls
+exit

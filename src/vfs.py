@@ -34,6 +34,15 @@ class VfsNode:
             raise VfsError(f"повторяющееся имя: {child.name}")
         self.children[child.name] = child
 
+    def remove_child(self, child_name: str) -> None:
+        """Удаляет дочерний узел из каталога."""
+        if not self.is_directory:
+            raise VfsError("нельзя удалить узел из файла")
+        try:
+            del self.children[child_name]
+        except KeyError as error:
+            raise VfsError(f"путь не найден: {child_name}") from error
+
 
 class VirtualFileSystem:
     """VFS, полностью хранящаяся в памяти процесса."""
@@ -51,7 +60,7 @@ class VirtualFileSystem:
 
     @classmethod
     def from_xml_file(cls, file_path: str) -> "VirtualFileSystem":
-        """Загружает VFS из XML, не распаковывая данные на диск."""
+        """Загружает VFS из XML без изменения исходного файла."""
         try:
             with open(file_path, "rb") as source_file:
                 source_data = source_file.read()
@@ -92,6 +101,19 @@ class VirtualFileSystem:
                 message = f"путь не найден: {normalized_path}"
                 raise VfsError(message) from error
         return node
+
+    def get_parent_and_name(
+        self,
+        path: str,
+        current_path: str = "/",
+    ) -> tuple[VfsNode, str, PurePosixPath]:
+        """Возвращает родительский каталог, имя и полный путь узла."""
+        normalized_path = self.normalize_path(path, current_path)
+        if normalized_path == ROOT_PATH:
+            raise VfsError("нельзя выполнить операцию для корня VFS")
+        parent_path = normalized_path.parent
+        parent = self.get_node(str(parent_path))
+        return parent, normalized_path.name, normalized_path
 
     def normalize_path(self, path: str, current_path: str = "/") -> PurePosixPath:
         """Нормализует путь относительно текущего каталога."""

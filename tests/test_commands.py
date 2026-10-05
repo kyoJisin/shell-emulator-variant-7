@@ -1,18 +1,21 @@
-
 """Тесты основных команд эмулятора оболочки."""
 
 import unittest
 
 from src.commands import CommandExecutor
-from src.vfs import VirtualFileSystem
+from src.vfs import VfsError, VirtualFileSystem
 
 
 VFS_XML = b"""\
 <vfs name="commands">
   <directory name="/">
     <file name="hello.txt">Hello\nWorld\nPython\nShell</file>
+    <file name="remove.txt">Delete me</file>
     <directory name="docs">
       <file name="readme.txt">First\nSecond\nThird</file>
+      <directory name="nested">
+        <file name="item.txt">Nested item</file>
+      </directory>
     </directory>
   </directory>
 </vfs>
@@ -29,7 +32,8 @@ class CommandExecutorTests(unittest.TestCase):
 
     def test_ls_lists_root_directory(self) -> None:
         """ls выводит элементы корневого каталога."""
-        self.assertEqual(self.executor.ls([]), "docs  hello.txt")
+        expected = "docs  hello.txt  remove.txt"
+        self.assertEqual(self.executor.ls([]), expected)
 
     def test_ls_lists_file_name(self) -> None:
         """ls для файла выводит его имя."""
@@ -85,3 +89,52 @@ class CommandExecutorTests(unittest.TestCase):
         """head отклоняет нечисловое количество строк."""
         output = self.executor.head(["-n", "many", "hello.txt"])
         self.assertEqual(output, "head: неверное число строк")
+
+    def test_rm_removes_file_from_memory(self) -> None:
+        """rm удаляет файл только из текущей VFS в памяти."""
+        output = self.executor.rm(["remove.txt"])
+        self.assertEqual(output, "")
+        with self.assertRaises(VfsError):
+            self.executor._vfs.get_node("/remove.txt")
+
+    def test_rm_rejects_directory_without_recursive_flag(self) -> None:
+        """rm запрещает удалять каталог без параметра -r."""
+        output = self.executor.rm(["docs"])
+        expected = "rm: это каталог: /docs; используйте -r"
+        self.assertEqual(output, expected)
+
+    def test_rm_recursively_removes_directory(self) -> None:
+        """rm -r удаляет каталог со всем его содержимым."""
+        output = self.executor.rm(["-r", "docs"])
+        self.assertEqual(output, "")
+        with self.assertRaises(VfsError):
+            self.executor._vfs.get_node("/docs")
+
+    def test_rm_rejects_root_directory(self) -> None:
+        """rm -r не позволяет удалить корень VFS."""
+        output = self.executor.rm(["-r", "/"])
+        self.assertEqual(output, "rm: нельзя выполнить операцию для корня VFS")
+
+    def test_rm_rejects_current_directory(self) -> None:
+        """rm не удаляет каталог, являющийся текущим."""
+        self.executor.cd(["docs"])
+        output = self.executor.rm(["-r", "/docs"])
+        expected = "rm: нельзя удалить текущий каталог или его родителя"
+        self.assertEqual(output, expected)
+
+    def test_chown_changes_node_owner_in_memory(self) -> None:
+        """chown меняет владельца файла только в памяти."""
+        output = self.executor.chown(["student", "hello.txt"])
+        self.assertEqual(output, "")
+        node = self.executor._vfs.get_node("/hello.txt")
+        self.assertEqual(node.owner, "student")
+
+    def test_chown_rejects_wrong_argument_count(self) -> None:
+        """chown требует имя владельца и путь."""
+        output = self.executor.chown(["student"])
+        self.assertEqual(output, "chown: требуется владелец и путь")
+
+    def test_chown_rejects_missing_path(self) -> None:
+        """chown сообщает об отсутствующем пути."""
+        output = self.executor.chown(["student", "missing.txt"])
+        self.assertTrue(output.startswith("chown: путь не найден:"))

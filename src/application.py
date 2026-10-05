@@ -26,6 +26,8 @@ class ShellApplication:
             "rev": self._handle_rev,
             "uname": self._handle_uname,
             "head": self._handle_head,
+            "rm": self._handle_rm,
+            "chown": self._handle_chown,
             "vfs-info": self._handle_vfs_info,
         }
 
@@ -121,6 +123,18 @@ class ShellApplication:
         if self._executor is None:
             return "head: VFS не загружена"
         return self._executor.head(arguments)
+
+    def _handle_rm(self, _: str, arguments: list[str]) -> str:
+        """Выполняет rm или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "rm: VFS не загружена"
+        return self._executor.rm(arguments)
+
+    def _handle_chown(self, _: str, arguments: list[str]) -> str:
+        """Выполняет chown или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "chown: VFS не загружена"
+        return self._executor.chown(arguments)
 
     def _handle_vfs_info(self, _: str, arguments: list[str]) -> str:
         """Выводит имя и SHA-256 загруженной VFS."""

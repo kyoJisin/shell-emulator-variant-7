@@ -36,7 +36,7 @@ python -m src.main --vfs examples\vfs_files.xml
 
 ```powershell
 python -m src.main --vfs examples\vfs_files.xml `
-  --script examples\scripts\stage4.txt
+  --script examples\scripts\stage5.txt
 ```
 
 ## Параметры
@@ -83,34 +83,78 @@ VFS загружается в память из XML. Программа не р�
 | `uname -a` | Выводит расширенные данные об эмуляторе |
 | `head путь` | Выводит первые 10 строк текстового файла |
 | `head -n N путь` | Выводит первые `N` строк файла |
+| `rm путь` | Удаляет файл из VFS в памяти |
+| `rm -r путь` | Рекурсивно удаляет каталог из VFS в памяти |
+| `chown владелец путь` | Изменяет владельца файла или каталога в памяти |
 | `exit` | Завершает работу эмулятора |
 
-Команды `ls`, `cd`, `rev` и `head` работают только при передаче `--vfs`.
+Команды `ls`, `cd`, `rev`, `head`, `rm` и `chown` работают только при
+передаче параметра `--vfs`.
 
-## Проверка этапов
+Команды `rm` и `chown` не меняют XML-файл. После нового запуска VFS заново
+создаётся из исходного XML, поэтому удалённые файлы и исходные владельцы
+восстанавливаются.
 
-Все тесты запускаются одной командой:
+## Примеры
+
+Этап 2:
+
+```powershell
+.\examples\run_stage2.bat
+```
+
+Этап 3:
+
+```powershell
+.\examples\run_stage3_files.bat
+```
+
+Этап 4:
+
+```powershell
+.\examples\run_stage4.bat
+```
+
+Этап 5:
+
+```powershell
+.\examples\run_stage5.bat
+```
+
+Интерактивная проверка:
+
+```powershell
+python -m src.main --vfs examples\vfs_files.xml
+```
+
+После запуска можно ввести:
+
+```text
+ls
+chown student hello.txt
+rm hello.txt
+ls
+exit
+```
+
+## Тесты
+
+Для запуска всех тестов:
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-Тесты распределены по этапам следующим образом:
+## Проверка этапов
 
-| Этап | Файл тестов | Что проверяется |
+| Этап | Файл или сценарий | Что проверяется |
 |---|---|---|
-| Этап 1: REPL | `tests/test_command_parser.py` | Разбор команд, пустая строка и раскрытие переменных окружения |
-| Этап 1: REPL | `tests/test_application.py` | Неизвестная команда, `exit` и обработка команд |
-| Этап 2: Конфигурация | `examples/run_stage2.bat` | Ручная проверка `--vfs`, `--script`, сценария и ошибок |
-| Этап 3: VFS | `tests/test_vfs.py` | XML, SHA-256, Base64, пути и ошибки VFS |
-| Этап 3: VFS | `tests/test_application.py` | Команда `vfs-info` с VFS и без неё |
-| Этап 4: Команды | `tests/test_commands.py` | `ls`, `cd`, `rev`, `uname` и `head` |
-| Этап 4: Команды | `tests/test_application.py` | Обработка команд без загруженной VFS |
-
-Ручные сценарии Windows:
-
-```powershell
-.\examples\run_stage2.bat
-.\examples\run_stage3_files.bat
-.\examples\run_stage4.bat
-```
+| Этап 1 | `tests/test_command_parser.py` | Разбор команд и переменные окружения |
+| Этап 1 | `tests/test_application.py` | REPL, `exit` и ошибки команд |
+| Этап 2 | `examples/run_stage2.bat` | Параметры и стартовый сценарий |
+| Этап 3 | `tests/test_vfs.py` | XML, SHA-256, Base64 и пути VFS |
+| Этап 3 | `examples/run_stage3_files.bat` | Загрузка VFS и `vfs-info` |
+| Этап 4 | `tests/test_commands.py` | `ls`, `cd`, `rev`, `uname`, `head` |
+| Этап 4 | `examples/run_stage4.bat` | Сценарий основных команд |
+| Этап 5 | `tests/test_commands.py` | `rm`, `rm -r`, `chown` и ошибки |
+| Этап 5 | `examples/run_stage5.bat` | Изменения VFS только в памяти |
