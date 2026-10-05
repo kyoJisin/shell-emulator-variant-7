@@ -1,0 +1,16 @@
+# Этап 4: основные команды VFS.
+vfs-info
+ls
+ls /docs
+cd /docs
+ls
+head readme.txt
+head -n 2 readme.txt
+rev readme.txt
+uname
+uname -a
+cd /
+cd hello.txt
+ls /missing
+head -n text hello.txt
+exit

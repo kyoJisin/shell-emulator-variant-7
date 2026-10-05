@@ -5,6 +5,7 @@ import getpass
 import socket
 
 from src.command_parser import parse_command
+from src.commands import CommandExecutor
 from src.vfs import VirtualFileSystem
 
 
@@ -12,15 +13,19 @@ CommandHandler = Callable[[str, list[str]], str]
 
 
 class ShellApplication:
-    """Минимальный интерактивный эмулятор оболочки."""
+    """Интерактивный эмулятор UNIX-подобной оболочки."""
 
     def __init__(self, vfs: VirtualFileSystem | None = None) -> None:
         """Инициализирует обработчики команд и состояние приложения."""
         self._is_running = True
         self._vfs = vfs
+        self._executor = CommandExecutor(vfs) if vfs else None
         self._handlers: dict[str, CommandHandler] = {
-            "ls": self._handle_stub,
-            "cd": self._handle_stub,
+            "ls": self._handle_ls,
+            "cd": self._handle_cd,
+            "rev": self._handle_rev,
+            "uname": self._handle_uname,
+            "head": self._handle_head,
             "vfs-info": self._handle_vfs_info,
         }
 
@@ -56,10 +61,11 @@ class ShellApplication:
 
     @property
     def prompt(self) -> str:
-        """Создаёт приглашение из данных текущей операционной системы."""
+        """Создаёт приглашение из данных ОС и текущего каталога VFS."""
         username = getpass.getuser()
         hostname = socket.gethostname()
-        return f"{username}@{hostname}:~$ "
+        current_path = self._current_path()
+        return f"{username}@{hostname}:{current_path}$ "
 
     def execute(self, line: str) -> str:
         """Выполняет одну строку команды."""
@@ -76,23 +82,53 @@ class ShellApplication:
             return f"command not found: {command_name}"
         return handler(command_name, arguments)
 
-    def _handle_vfs_info(
-        self,
-        command_name: str,
-        arguments: list[str],
-    ) -> str:
+    def _current_path(self) -> str:
+        """Возвращает текущий путь VFS или домашний символ без VFS."""
+        if self._executor is None:
+            return "~"
+        return self._executor.current_path
+
+    def _handle_ls(self, _: str, arguments: list[str]) -> str:
+        """Выполняет ls или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "ls: VFS не загружена"
+        return self._executor.ls(arguments)
+
+    def _handle_cd(self, _: str, arguments: list[str]) -> str:
+        """Выполняет cd или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "cd: VFS не загружена"
+        return self._executor.cd(arguments)
+
+    def _handle_rev(self, _: str, arguments: list[str]) -> str:
+        """Выполняет rev или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "rev: VFS не загружена"
+        return self._executor.rev(arguments)
+
+    def _handle_uname(self, _: str, arguments: list[str]) -> str:
+        """Выполняет uname без требования загруженной VFS."""
+        if self._executor is None:
+            if not arguments:
+                return "Shell Emulator"
+            if arguments == ["-a"]:
+                return "Shell Emulator Windows Python"
+            return "uname: неподдерживаемый параметр"
+        return self._executor.uname(arguments)
+
+    def _handle_head(self, _: str, arguments: list[str]) -> str:
+        """Выполняет head или сообщает, что VFS не загружена."""
+        if self._executor is None:
+            return "head: VFS не загружена"
+        return self._executor.head(arguments)
+
+    def _handle_vfs_info(self, _: str, arguments: list[str]) -> str:
         """Выводит имя и SHA-256 загруженной VFS."""
-        del command_name
         if arguments:
             return "vfs-info: команда не принимает аргументы"
         if self._vfs is None:
             return "vfs-info: VFS не загружена"
         return f"VFS: {self._vfs.name}\nSHA-256: {self._vfs.source_hash}"
-
-    def _handle_stub(self, command_name: str, arguments: list[str]) -> str:
-        """Возвращает имя и аргументы команды-заглушки."""
-        arguments_text = " ".join(arguments) or "(none)"
-        return f"{command_name}: arguments: {arguments_text}"
 
     def _handle_exit(self, arguments: list[str]) -> str:
         """Останавливает REPL, если exit передан без аргументов."""

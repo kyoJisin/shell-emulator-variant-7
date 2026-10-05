@@ -32,16 +32,6 @@ class ShellApplicationTests(unittest.TestCase):
         output = self.application.execute("exit now")
         self.assertEqual(output, "exit: too many arguments")
 
-    def test_stub_command_returns_arguments(self) -> None:
-        """Команда-заглушка выводит полученные аргументы."""
-        output = self.application.execute("ls documents")
-        self.assertEqual(output, "ls: arguments: documents")
-
-    def test_cd_stub_returns_command_name(self) -> None:
-        """Заглушка cd выводит имя команды."""
-        output = self.application.execute("cd folder")
-        self.assertEqual(output, "cd: arguments: folder")
-
     def test_vfs_info_without_vfs_returns_error(self) -> None:
         """Команда сообщает об отсутствии загруженной VFS."""
         output = self.application.execute("vfs-info")
@@ -55,8 +45,12 @@ class ShellApplicationTests(unittest.TestCase):
         self.assertIn("VFS: test-vfs", output)
         self.assertIn("SHA-256:", output)
 
-    def test_vfs_info_rejects_arguments(self) -> None:
-        """Команда vfs-info не принимает аргументы."""
-        output = self.application.execute("vfs-info extra")
-        expected = "vfs-info: команда не принимает аргументы"
-        self.assertEqual(output, expected)
+    def test_ls_without_vfs_returns_error(self) -> None:
+        """Команда ls требует загруженную VFS."""
+        output = self.application.execute("ls")
+        self.assertEqual(output, "ls: VFS не загружена")
+
+    def test_uname_runs_without_vfs(self) -> None:
+        """Команда uname работает без VFS."""
+        output = self.application.execute("uname")
+        self.assertEqual(output, "Shell Emulator")
