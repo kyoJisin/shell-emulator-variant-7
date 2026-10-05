@@ -87,41 +87,30 @@ VFS загружается в память из XML. Программа не р�
 
 Команды `ls`, `cd`, `rev` и `head` работают только при передаче `--vfs`.
 
-## Примеры
+## Проверка этапов
 
-Этап 3:
-
-```powershell
-.\examples\run_stage3_files.bat
-```
-
-Этап 4:
-
-```powershell
-.\examples\run_stage4.bat
-```
-
-Интерактивная проверка:
-
-```powershell
-python -m src.main --vfs examples\vfs_files.xml
-```
-
-После запуска можно ввести:
-
-```text
-ls
-cd docs
-head readme.txt
-rev readme.txt
-uname -a
-exit
-```
-
-## Тесты
-
-Для запуска всех тестов:
+Все тесты запускаются одной командой:
 
 ```powershell
 python -m unittest discover -s tests -v
+```
+
+Тесты распределены по этапам следующим образом:
+
+| Этап | Файл тестов | Что проверяется |
+|---|---|---|
+| Этап 1: REPL | `tests/test_command_parser.py` | Разбор команд, пустая строка и раскрытие переменных окружения |
+| Этап 1: REPL | `tests/test_application.py` | Неизвестная команда, `exit` и обработка команд |
+| Этап 2: Конфигурация | `examples/run_stage2.bat` | Ручная проверка `--vfs`, `--script`, сценария и ошибок |
+| Этап 3: VFS | `tests/test_vfs.py` | XML, SHA-256, Base64, пути и ошибки VFS |
+| Этап 3: VFS | `tests/test_application.py` | Команда `vfs-info` с VFS и без неё |
+| Этап 4: Команды | `tests/test_commands.py` | `ls`, `cd`, `rev`, `uname` и `head` |
+| Этап 4: Команды | `tests/test_application.py` | Обработка команд без загруженной VFS |
+
+Ручные сценарии Windows:
+
+```powershell
+.\examples\run_stage2.bat
+.\examples\run_stage3_files.bat
+.\examples\run_stage4.bat
 ```
