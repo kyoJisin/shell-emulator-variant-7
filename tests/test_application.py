@@ -3,6 +3,16 @@
 import unittest
 
 from src.application import ShellApplication
+from src.vfs import VirtualFileSystem
+
+
+VFS_XML = b"""\
+<vfs name="test-vfs">
+  <directory name="/">
+    <file name="hello.txt">Hello</file>
+  </directory>
+</vfs>
+"""
 
 
 class ShellApplicationTests(unittest.TestCase):
@@ -31,3 +41,22 @@ class ShellApplicationTests(unittest.TestCase):
         """Заглушка cd выводит имя команды."""
         output = self.application.execute("cd folder")
         self.assertEqual(output, "cd: arguments: folder")
+
+    def test_vfs_info_without_vfs_returns_error(self) -> None:
+        """Команда сообщает об отсутствии загруженной VFS."""
+        output = self.application.execute("vfs-info")
+        self.assertEqual(output, "vfs-info: VFS не загружена")
+
+    def test_vfs_info_returns_name_and_hash(self) -> None:
+        """Команда выводит имя и SHA-256 загруженной VFS."""
+        vfs = VirtualFileSystem.from_xml_bytes(VFS_XML)
+        application = ShellApplication(vfs)
+        output = application.execute("vfs-info")
+        self.assertIn("VFS: test-vfs", output)
+        self.assertIn("SHA-256:", output)
+
+    def test_vfs_info_rejects_arguments(self) -> None:
+        """Команда vfs-info не принимает аргументы."""
+        output = self.application.execute("vfs-info extra")
+        expected = "vfs-info: команда не принимает аргументы"
+        self.assertEqual(output, expected)

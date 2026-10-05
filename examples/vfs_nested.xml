@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vfs name="nested">
+  <directory name="/" owner="root">
+    <directory name="home" owner="student">
+      <directory name="student">
+        <directory name="projects">
+          <file name="notes.txt">Три уровня вложенности работают</file>
+        </directory>
+      </directory>
+    </directory>
+  </directory>
+</vfs>

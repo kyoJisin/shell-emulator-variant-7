@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vfs name="files">
+  <directory name="/" owner="root">
+    <file name="hello.txt" owner="student">Привет из VFS</file>
+    <file name="data.bin" encoding="base64">AAECAwQ=</file>
+    <directory name="docs" owner="student">
+      <file name="readme.txt">Документация VFS</file>
+    </directory>
+  </directory>
+</vfs>

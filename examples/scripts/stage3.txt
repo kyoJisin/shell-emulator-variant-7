@@ -1,0 +1,8 @@
+# Этап 3: загрузка VFS, vfs-info и обработка ошибок.
+vfs-info
+vfs-info extra
+ls
+cd docs
+unknown-command
+exit extra
+exit

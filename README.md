@@ -1,63 +1,124 @@
-# Shell emulator, variant 7
+# Эмулятор оболочки ОС, вариант 7
 
-A Python CLI emulator of a UNIX-like shell created for the configuration
-management practical assignment, variant 7. The project currently includes
-stages 1 and 2.
+Консольный эмулятор UNIX-подобной оболочки, написанный на Python для
+практической работы по конфигурационному управлению. Программа запускается
+на Windows, работает с виртуальной файловой системой из XML и не изменяет
+исходный XML-файл.
 
-## Requirements
+## Требования
 
-- Windows 10 or newer
-- Python 3.10 or newer
+- Windows 10 или новее
+- Python 3.10 или новее
+- Git for Windows
 
-No third-party packages are required.
+Сторонние библиотеки не требуются.
 
-## Start
+## Запуск
 
-From the repository root, run one of the commands:
+Откройте терминал в корне репозитория и выполните:
 
 ```powershell
 python -m src.main
+```
+
+Или запустите файл:
+
+```powershell
 .\run.bat
 ```
 
-The prompt uses the current operating system account and host name:
+Приглашение формируется по данным текущей ОС:
 
 ```text
 username@hostname:~$
 ```
 
-## Stage 1
-
-- Interactive REPL
-- Commands `ls` and `cd` as stubs
-- Command `exit`
-- Expansion of environment variables in `$NAME`, `${NAME}`, and `%NAME%`
-  formats
-
-## Stage 2
-
-The emulator accepts these optional parameters:
+## Параметры запуска
 
 ```powershell
-python -m src.main --vfs path\to\vfs.xml --script path\to\script.txt
+python -m src.main --vfs ПУТЬ_К_XML --script ПУТЬ_К_СЦЕНАРИЮ
 ```
 
-- `--vfs` reserves a path to the VFS XML file for the next stage.
-- `--script` executes commands from a UTF-8 text file.
-- Startup prints all received parameter values for debugging.
-- The script prints each command with the prompt, keeps going after an error,
-  and stops after a valid `exit` command.
+- `--vfs` — путь к XML-файлу виртуальной файловой системы.
+- `--script` — путь к UTF-8 сценарию с командами.
+- При старте отображаются значения всех переданных параметров.
+- Команды сценария выводятся вместе с приглашением.
+- Ошибочная строка сценария не останавливает выполнение следующих строк.
 
-Run the stage 2 demonstration on Windows:
+## Формат XML-VFS
+
+Виртуальная файловая система загружается в оперативную память. XML-файл
+служит только источником данных: программа не распаковывает его и не
+изменяет на физическом диске.
+
+```xml
+<vfs name="files">
+  <directory name="/" owner="root">
+    <file name="hello.txt" owner="student">Привет из VFS</file>
+    <file name="data.bin" encoding="base64">AAECAwQ=</file>
+    <directory name="docs">
+      <file name="readme.txt">Документация</file>
+    </directory>
+  </directory>
+</vfs>
+```
+
+Поддерживаются элементы:
+
+- `<directory>` — каталог;
+- `<file>` — файл с текстовым содержимым UTF-8;
+- `<file encoding="base64">` — файл с двоичным содержимым Base64;
+- `owner` — владелец файла или каталога, по умолчанию `root`.
+
+## Команды
+
+| Команда | Описание |
+|---|---|
+| `ls [аргументы]` | Заглушка этапов 1–3: выводит переданные аргументы |
+| `cd [аргументы]` | Заглушка этапов 1–3: выводит переданные аргументы |
+| `vfs-info` | Выводит имя загруженной VFS и SHA-256 исходного XML |
+| `exit` | Завершает работу эмулятора |
+
+Команда `vfs-info` не принимает аргументы. Если VFS не была передана через
+`--vfs`, выводится соответствующая ошибка.
+
+## Примеры этапа 3
+
+Минимальная VFS:
 
 ```powershell
-.\examples\run_stage2.bat
+.\examples\run_stage3_minimal.bat
 ```
 
-The example includes a deliberately unknown command and `exit extra` to show
-error handling.
+VFS с несколькими файлами:
 
-## Tests
+```powershell
+.\examples\run_stage3_files.bat
+```
+
+VFS с вложенностью не менее трёх уровней:
+
+```powershell
+.\examples\run_stage3_nested.bat
+```
+
+Проверка вручную:
+
+```powershell
+python -m src.main --vfs examples\vfs_files.xml
+```
+
+Затем введите:
+
+```text
+vfs-info
+vfs-info extra
+exit
+```
+
+## Тесты
+
+Для запуска всех тестов выполните:
 
 ```powershell
 python -m unittest discover -s tests -v
