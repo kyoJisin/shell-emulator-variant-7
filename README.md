@@ -100,6 +100,12 @@ VFS загружается в память из XML. Программа не р�
 Этап 2:
 
 ```powershell
+.\examples\run_stage1.bat
+```
+
+Этап 2:
+
+```powershell
 .\examples\run_stage2.bat
 ```
 
@@ -149,12 +155,12 @@ python -m unittest discover -s tests -v
 
 | Этап | Файл или сценарий | Что проверяется |
 |---|---|---|
-| Этап 1 | `tests/test_command_parser.py` | Разбор команд и переменные окружения |
-| Этап 1 | `tests/test_application.py` | REPL, `exit` и ошибки команд |
+| Этап 1 | `examples/run_stage1.bat` | Запуск REPL, команда `exit` и обработка неизвестной команды |
+| Этап 1 | `tests/test_command_parser.py` | Дополнительные тесты синтаксического разбора и переменных окружения |
 | Этап 2 | `examples/run_stage2.bat` | Параметры и стартовый сценарий |
 | Этап 3 | `tests/test_vfs.py` | XML, SHA-256, Base64 и пути VFS |
 | Этап 3 | `examples/run_stage3_files.bat` | Загрузка VFS и `vfs-info` |
-| Этап 4 | `tests/test_commands.py` | `ls`, `cd`, `rev`, `uname`, `head` |
+| Этап 4 | `tests/test_commands.py` | `ls`, `cd`, `rev`, `uname` и `head` |
 | Этап 4 | `examples/run_stage4.bat` | Сценарий основных команд |
 | Этап 5 | `tests/test_commands.py` | `rm`, `rm -r`, `chown` и ошибки |
 | Этап 5 | `examples/run_stage5.bat` | Изменения VFS только в памяти |
