@@ -1,0 +1,6 @@
+# Stage 2: startup script demonstration.
+ls
+cd documents
+unknown-command
+exit extra
+exit

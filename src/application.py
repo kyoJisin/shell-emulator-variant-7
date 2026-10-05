@@ -1,4 +1,4 @@
-"""Интерактивный цикл и обработка команд эмулятора."""
+"""Interactive loop and command handling for the shell emulator."""
 
 from collections.abc import Callable
 import getpass
@@ -10,10 +10,10 @@ CommandHandler = Callable[[str, list[str]], str]
 
 
 class ShellApplication:
-    """Минимальный интерактивный эмулятор оболочки."""
+    """Minimal interactive shell emulator."""
 
     def __init__(self) -> None:
-        """Инициализирует обработчики доступных команд."""
+        """Initialize command handlers and the application state."""
         self._is_running = True
         self._handlers: dict[str, CommandHandler] = {
             "ls": self._handle_stub,
@@ -21,7 +21,7 @@ class ShellApplication:
         }
 
     def run(self) -> None:
-        """Запускает REPL до exit или конца ввода."""
+        """Run the REPL until exit or end of input."""
         while self._is_running:
             try:
                 line = input(self.prompt)
@@ -31,15 +31,34 @@ class ShellApplication:
             if output:
                 print(output)
 
+    def run_script(self, script_path: str) -> None:
+        """Run commands from a text file and continue after errors."""
+        try:
+            with open(script_path, encoding="utf-8") as script_file:
+                lines = script_file.readlines()
+        except OSError as error:
+            print(f"script error: {error}")
+            return
+        for line in lines:
+            command_line = line.strip()
+            if not command_line or command_line.startswith("#"):
+                continue
+            print(f"{self.prompt}{command_line}")
+            output = self.execute(command_line)
+            if output:
+                print(output)
+            if not self._is_running:
+                break
+
     @property
     def prompt(self) -> str:
-        """Формирует приглашение из данных реальной ОС."""
+        """Build a prompt from the current operating system data."""
         username = getpass.getuser()
         hostname = socket.gethostname()
         return f"{username}@{hostname}:~$ "
 
     def execute(self, line: str) -> str:
-        """Выполняет одну строку пользовательского ввода."""
+        """Execute one command line entered by the user."""
         try:
             command_name, arguments = parse_command(line)
         except ValueError as error:
@@ -54,12 +73,12 @@ class ShellApplication:
         return handler(command_name, arguments)
 
     def _handle_stub(self, command_name: str, arguments: list[str]) -> str:
-        """Возвращает результат выполнения команды-заглушки."""
+        """Return the name and arguments of a stub command."""
         arguments_text = " ".join(arguments) or "(none)"
         return f"{command_name}: arguments: {arguments_text}"
 
     def _handle_exit(self, arguments: list[str]) -> str:
-        """Останавливает REPL, если команда не содержит аргументов."""
+        """Stop the REPL when exit has no arguments."""
         if arguments:
             return "exit: too many arguments"
         self._is_running = False
