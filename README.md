@@ -97,7 +97,7 @@ VFS загружается в память из XML. Программа не р�
 
 ## Примеры
 
-Этап 2:
+Этап 1:
 
 ```powershell
 .\examples\run_stage1.bat
