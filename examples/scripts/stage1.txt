@@ -1,0 +1,5 @@
+# Этап 1: Создание REPL.
+unknown-$USERNAME
+unknown-command
+exit extra
+exit
